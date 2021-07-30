@@ -17,7 +17,6 @@ if (!JWT_SECRET) {
 }
 
 const routes = new Router();
-
 routes.use(bodyParser.json());
 
 const origin = process.env.UI_SERVER_ORIGIN || 'http://localhost:8000';
@@ -37,8 +36,9 @@ function getUser(req) {
 
 routes.post('/signin', async (req, res) => {
   if (!JWT_SECRET) {
-    res.status(500).send('Missing JWT_SECRET. Refusing to autenticate');
+    res.status(500).send('Missing JWT_SECRET. Refusing to authenticate');
   }
+
   const googleToken = req.body.google_token;
   if (!googleToken) {
     res.status(400).send({ code: 400, message: 'Missing Token' });
@@ -60,22 +60,18 @@ routes.post('/signin', async (req, res) => {
   };
 
   const token = jwt.sign(credentials, JWT_SECRET);
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    domain: process.env.COOKIE_DOMAIN,
-  });
+  res.cookie('jwt', token, { httpOnly: true, domain: process.env.COOKIE_DOMAIN });
+
   res.json(credentials);
 });
 
 routes.post('/signout', async (req, res) => {
-  res.clearCookie('jwt', {
-    domain: process.env.COOKIE_DOMAIN,
-  });
+  res.clearCookie('jwt');
   res.json({ status: 'ok' });
 });
 
 routes.post('/user', (req, res) => {
-  res.send(getUser(req));
+  res.json(getUser(req));
 });
 
 function mustBeSignedIn(resolver) {
